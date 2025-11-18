@@ -22,9 +22,32 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     await client.connect();
-    const db = client.db("studymate")
-    const partnerColl = db.collection("partners")
+    const db = client.db("studymate");
+    const partnersColl = db.collection("partners");
 
+    // mongodb server get Data
+    app.get("/partners", async (req, res) => {
+      const cursor = partnersColl.find();
+      const result = await cursor.toArray();
+      res.send(result);
+      console.log(result);
+    });
+
+    // send partner data to mongodb
+    app.post("/partners", async (req, res) => {
+      const data = req.body; //replace
+      const result = await partnersColl.insertMany(data);
+      res.send(result);
+      console.log(result);
+    });
+
+    // delete data
+    app.delete("/partners", async (req, res) => {
+      const query = { profileimage: { $regex: "ibb" } };
+      const result = await partnersColl.deleteMany(query);
+      res.send(result);
+      console.log(result);
+    });
 
     await client.db("admin").command({ ping: 1 });
     console.log(
