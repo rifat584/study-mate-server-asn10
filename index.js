@@ -2,7 +2,7 @@ const express = require("express");
 const app = express();
 const port = process.env.port || 3000;
 const cors = require("cors");
-const { MongoClient, ServerApiVersion } = require("mongodb");
+const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 // middlewere
 app.use(cors());
 app.use(express.json());
@@ -33,6 +33,21 @@ async function run() {
       console.log(result);
     });
 
+    // get top 3 rated partner data
+    app.get('/partners/top-rated', async(req, res)=>{
+      const cursor = partnersColl.find().sort({rating:-1}).limit(3);
+      const result = await cursor.toArray();
+      res.send(result)
+    })
+
+    // get partner's details by id
+    app.get('/partners/details/:id', async(req, res)=>{
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)};
+      const result = await partnersColl.findOne(query);
+      res.send(result)
+    })
+    
     // send partner data to mongodb
     app.post("/partners", async (req, res) => {
       const data = req.body; //replace
