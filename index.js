@@ -34,26 +34,56 @@ async function run() {
     });
 
     // get top 3 rated partner data
-    app.get('/partners/top-rated', async(req, res)=>{
-      const cursor = partnersColl.find().sort({rating:-1}).limit(3);
+    app.get("/partners/top-rated", async (req, res) => {
+      const cursor = partnersColl.find().sort({ rating: -1 }).limit(3);
       const result = await cursor.toArray();
-      res.send(result)
-    })
+      res.send(result);
+    });
 
+    // get partners by subject
+    app.get("/partners/:subject", async (req, res) => {
+      const subject = req.params.subject;
+
+      const query = { subject: { $regex: subject, $options: "i" } };
+
+      const cursor = partnersColl.find(query);
+      const result = await cursor.toArray();
+
+      res.send(result);
+    });
     // get partner's details by id
-    app.get('/partners/details/:id', async(req, res)=>{
+    app.get("/partner-details/:id", async (req, res) => {
       const id = req.params.id;
-      const query = {_id: new ObjectId(id)};
+      const query = { _id: new ObjectId(id) };
       const result = await partnersColl.findOne(query);
-      res.send(result)
-    })
-    
+      res.send(result);
+    });
+
     // send partner data to mongodb
     app.post("/partners", async (req, res) => {
       const data = req.body; //replace
-      const result = await partnersColl.insertMany(data);
+      console.log(req.body);
+      const result = await partnersColl.insertOne(data);
       res.send(result);
       console.log(result);
+    });
+
+    // update partner count
+    app.patch("/partner/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const updatePartner = {
+        $inc: {
+          patnerCount: 1,
+        },
+      };
+      const options = {};
+      const result = await partnersColl.updateOne(
+        filter,
+        updatePartner,
+        options
+      );
+      res.send(result);
     });
 
     // delete data
