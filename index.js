@@ -24,6 +24,7 @@ async function run() {
     await client.connect();
     const db = client.db("studymate");
     const partnersColl = db.collection("partners");
+    const connectionsColl = db.collection("connections");
 
     // mongodb server get Data
     app.get("/partners", async (req, res) => {
@@ -61,11 +62,9 @@ async function run() {
 
     // send partner data to mongodb
     app.post("/partners", async (req, res) => {
-      const data = req.body; //replace
-      console.log(req.body);
+      const data = req.body;
       const result = await partnersColl.insertOne(data);
       res.send(result);
-      console.log(result);
     });
 
     // update partner count
@@ -85,6 +84,52 @@ async function run() {
       );
       res.send(result);
     });
+
+    // New Collection for all connections
+    app.get("/connections", async (req, res) => {
+      const email = req.query.email;
+      const filter = {
+        email: email,
+      };
+      const cursor = connectionsColl.find(filter);
+      const result = await cursor.toArray();
+      res.send(result);
+    });
+    // connections add to the db
+    app.post("/connections", async (req, res) => {
+      const data = req.body;
+      const result = await connectionsColl.insertOne(data);
+      res.send(result);
+    });
+
+    // connection delete
+    app.delete('/connections/:id', async(req, res)=>{
+      const id = req.params.id;
+      const filter = {
+        _id: new ObjectId(id)
+      }
+      const result = await connectionsColl.deleteOne(filter);
+      res.send(result)
+      console.log(result);
+    })
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
     // delete data
     app.delete("/partners", async (req, res) => {
