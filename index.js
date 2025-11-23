@@ -31,7 +31,6 @@ async function run() {
       const cursor = partnersColl.find();
       const result = await cursor.toArray();
       res.send(result);
-      console.log(result);
     });
 
     // get top 3 rated partner data
@@ -41,17 +40,20 @@ async function run() {
       res.send(result);
     });
 
-    // get partners by subject
-    app.get("/partners/:subject", async (req, res) => {
-      const subject = req.params.subject;
-
-      const query = { subject: { $regex: subject, $options: "i" } };
-
-      const cursor = partnersColl.find(query);
-      const result = await cursor.toArray();
-
+    // get partners by query
+    app.get("/partners/query", async (req, res) => {
+      const { sort, search } = req.query;
+      let query = {};
+      if (sort) {
+        query.experienceLevel = { $regex: sort, $options: "i" };
+      }
+      if (search) {
+        query.subject = { $regex: search, $options: "i" };
+      }
+      const result = await partnersColl.find(query).toArray();
       res.send(result);
     });
+
     // get partner's details by id
     app.get("/partner-details/:id", async (req, res) => {
       const id = req.params.id;
@@ -95,6 +97,14 @@ async function run() {
       const result = await cursor.toArray();
       res.send(result);
     });
+
+    // get connection by ID
+    app.get("/connections/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const result = await connectionsColl.findOne(filter);
+      res.send(result);
+    });
     // connections add to the db
     app.post("/connections", async (req, res) => {
       const data = req.body;
@@ -103,40 +113,39 @@ async function run() {
     });
 
     // connection delete
-    app.delete('/connections/:id', async(req, res)=>{
+    app.delete("/connections/:id", async (req, res) => {
       const id = req.params.id;
       const filter = {
-        _id: new ObjectId(id)
-      }
+        _id: new ObjectId(id),
+      };
       const result = await connectionsColl.deleteOne(filter);
-      res.send(result)
-      console.log(result);
-    })
+      res.send(result);
+    });
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // update connection's details
+    app.patch("/connections/:id", async (req, res) => {
+      const id = req.params.id;
+      const filter = { _id: new ObjectId(id) };
+      const data = req.body;
+      const update = {
+        $set: {
+          partnerInfo: {
+            name: data.name,
+            profileimage: data.profileimage,
+            subject: data.subject,
+            studyMode: data.studyMode,
+          },
+        },
+      };
+      const result = await connectionsColl.updateOne(filter, update);
+      res.send(result);
+    });
 
     // delete data
     app.delete("/partners", async (req, res) => {
       const query = { profileimage: { $regex: "ibb" } };
       const result = await partnersColl.deleteMany(query);
       res.send(result);
-      console.log(result);
     });
 
     await client.db("admin").command({ ping: 1 });
