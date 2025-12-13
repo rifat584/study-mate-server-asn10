@@ -4,6 +4,7 @@ const cors = require("cors");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const app = express();
 const port = process.env.PORT || 3000;
+const clientPromise = require("./mongo");
 
 // middlewere
 app.use(cors());
@@ -21,7 +22,7 @@ const client = new MongoClient(uri, {
 
 async function run() {
   try {
-    await client.connect();
+    const client = await clientPromise;
     const db = client.db("studymate");
     const partnersColl = db.collection("partners");
     const connectionsColl = db.collection("connections");
